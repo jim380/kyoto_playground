@@ -10,10 +10,6 @@ import (
 )
 
 // docs: https://pkg.go.dev/github.com/kyoto-framework/kyoto/v2#hdr-Quick_start
-type StateBlock struct {
-	Height string
-}
-
 type BlockInfo struct {
 	Block struct {
 		Header header `json:"header"`
@@ -36,25 +32,25 @@ Component
   - Context holds common objects like http.ResponseWriter, *http.Request, etc
 */
 
-func GetBlockInfo(ctx *kyoto.Context) (state StateBlock) {
-	RESTAddr := "https://localhost:1317"
+func GetBlockInfo(ctx *kyoto.Context) (state BlockInfo) {
+	RESTAddr := "https://osmosis-api.polkachu.com/"
 	route := "/cosmos/base/tendermint/v1beta1/blocks/latest"
 
-	getLatestHeight := func() string {
-		var blockInfo BlockInfo
+	fetchBlockInfo := func() BlockInfo {
+		var state BlockInfo
 		resp, err := HttpQuery(RESTAddr + route)
 		if err != nil {
 			log.Printf("Failed to query HTTP: %v", err)
-			return ""
+			return BlockInfo{}
 		}
 
-		json.Unmarshal(resp, &blockInfo)
+		err = json.Unmarshal(resp, &state)
 		if err != nil {
 			log.Printf("Failed to unmarshal response: %v", err)
-			return ""
+			return BlockInfo{}
 		}
 
-		return blockInfo.Block.Header.Height
+		return state
 	}
 
 	/*
@@ -64,23 +60,23 @@ func GetBlockInfo(ctx *kyoto.Context) (state StateBlock) {
 		    - To push multiple component UI updates during a single action call,
 		        call kyoto.ActionFlush(ctx, state) to initiate an update
 	*/
-	handled := kyoto.Action(ctx, "Reload Latest Height", func(args ...any) {
+	handled := kyoto.Action(ctx, "Reload Block", func(args ...any) {
 		// add logic here
-		state.Height = getLatestHeight()
-		log.Println("New block height was fetched:", state.Height)
+		state = fetchBlockInfo()
+		log.Println("New block info fetched on block", state.Block.Header.Height)
 	})
 	// Prevent further execution if action handled
 	if handled {
 		return
 	}
 	// Default loading behavior if not handled
-	state.Height = getLatestHeight()
-	// Return
+	state = fetchBlockInfo()
+
 	return
 }
 
 type PIndexState struct {
-	LatestHeight *kyoto.ComponentF[StateBlock]
+	Block *kyoto.ComponentF[BlockInfo]
 }
 
 /*
@@ -93,7 +89,7 @@ func PIndex(ctx *kyoto.Context) (state PIndexState) {
 	kyoto.Template(ctx, "page.index.html")
 
 	// Attach components
-	state.LatestHeight = kyoto.Use(ctx, GetBlockInfo)
+	state.Block = kyoto.Use(ctx, GetBlockInfo)
 
 	return
 }

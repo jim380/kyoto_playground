@@ -1,6 +1,7 @@
 {{ define "GetBlockInfo" }}
 <div {{ state . }} name="GetBlockInfo">
-  <div>Block: {{ .Height }}</div>
+  <div>Chain Id: {{ .Block.Header.ChainID }}</div>
+  <div>Height: {{ .Block.Header.Height }}</div>
   <button
     style="
       background-color: #000000;
@@ -14,7 +15,7 @@
       cursor: pointer;
       border-radius: 4px;
     "
-    onclick="Action(this, 'Reload Latest Height')"
+    onclick="Action(this, 'Reload Block')"
   >
     Reload
   </button>
