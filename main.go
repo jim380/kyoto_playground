@@ -33,7 +33,7 @@ Component
 */
 
 func GetBlockInfo(ctx *kyoto.Context) (state BlockInfo) {
-	RESTAddr := "https://osmosis-api.polkachu.com/"
+	RESTAddr := "http://192.168.1.77:1318"
 	route := "/cosmos/base/tendermint/v1beta1/blocks/latest"
 
 	fetchBlockInfo := func() BlockInfo {
